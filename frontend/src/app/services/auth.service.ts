@@ -3,6 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
+let apiUrl = (location.hostname == 'localhost' || location.hostname == '127.0.0.1')
+? 'http://localhost:3000'
+: 'https://openclassrooms-p6-api.herokuapp.com'
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,7 +21,7 @@ export class AuthService {
 
   createUser(email: string, password: string) {
     return new Promise((resolve, reject) => {
-      this.http.post('http://localhost:3000/api/auth/signup', {email: email, password: password}).subscribe(
+      this.http.post(`${apiUrl}/api/auth/signup`, {email: email, password: password}).subscribe(
         (response: { message: string }) => {
           resolve(response);
         },
@@ -38,7 +42,7 @@ export class AuthService {
 
   loginUser(email: string, password) {
     return new Promise((resolve, reject) => {
-      this.http.post('http://localhost:3000/api/auth/login', {email: email, password: password}).subscribe(
+      this.http.post(`${apiUrl}/api/auth/login`, {email: email, password: password}).subscribe(
         (response: {userId: string, token: string}) => {
           this.userId = response.userId;
           this.authToken = response.token;
