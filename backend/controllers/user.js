@@ -3,8 +3,6 @@ const jwt = require('jsonwebtoken')
 
 const User = require('../models/User')
 
-require('dotenv').config()
-const TOKEN = process.env.TOKEN
 
 
 
@@ -37,7 +35,7 @@ exports.login = (req, res, next) => {
                         userId: user._id,
                         token: jwt.sign(
                             { userId: user._id},
-                            TOKEN,
+                            process.env.TOKEN,
                             { expiresIn: '24h'}                           
                         )
                     })
