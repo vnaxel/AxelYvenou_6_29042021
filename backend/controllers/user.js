@@ -1,22 +1,17 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const MaskData = require('maskdata')
+const cryptojs = require("crypto-js")
+const key = "flljvkqflqoifumqeoqefvuuepmqvfuqmvfeiu"
 const User = require('../models/User')
 
 require('dotenv').config()
 
-const emailMask2Options = {
-    maskWith: "*", 
-    unmaskedStartCharactersBeforeAt: 1,
-    unmaskedEndCharactersAfterAt: 1,
-    maskAtTheRate: false
-};
-
 exports.signup = (req, res, next) => {
+    const emailCryptoJs = cryptojs.HmacSHA256(req.body.email, `${process.env.CRYPTOJS_EMAIL}`).toString()
     bcrypt.hash(req.body.password, 10)
     .then(hash => {
         const user = new User({
-            email: MaskData.maskEmail2(req.body.email, emailMask2Options),
+            email: emailCryptoJs,
             password: hash
         })
         user.save()
@@ -26,27 +21,28 @@ exports.signup = (req, res, next) => {
     .catch(error => res.status(500).json({ error }))
 }
 
-exports.login = (req, res, next) => {
-    User.findOne({ email: MaskData.maskEmail2(req.body.email, emailMask2Options)})
-        .then(user => {
-            if (!user) {
-                return res.status(401).json({ error: 'Utilisateur non trouvé'})
+exports.login = (req, res) => {
+    const emailCryptoJs = cryptojs.HmacSHA256(req.body.email, `${process.env.CRYPTOJS_EMAIL}`).toString();
+    User.findOne({ email: emailCryptoJs })
+    .then((user) => {
+        if (!user) {
+            return res.status(401).json({ error: "Utilisateur inexistant" });
+        }
+        bcrypt.compare(req.body.password, user.password)
+        .then(valid => {
+            if (!valid) {
+                return res.status(401).json({ error: 'Mot de passe incorrect'})
             }
-            bcrypt.compare(req.body.password, user.password)
-                .then(valid => {
-                    if (!valid) {
-                        return res.status(401).json({ error: 'Mot de passe incorrect'})
-                    }
-                    return res.status(200).json({
-                        userId: user._id,
-                        token: jwt.sign(
-                            { userId: user._id},
-                            process.env.TOKEN_SECRET,
-                            { expiresIn: '24h'}                           
-                        )
-                    })
-                })
-                .catch(error => res.status(500).json({ error }))
+            return res.status(200).json({
+                userId: user._id,
+                token: jwt.sign(
+                    { userId: user._id},
+                    process.env.TOKEN_SECRET,
+                     { expiresIn: '24h'}                           
+                )
+            })
         })
         .catch(error => res.status(500).json({ error }))
+    })
+    .catch(error => res.status(500).json({ error }))
 }
