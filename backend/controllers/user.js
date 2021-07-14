@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cryptojs = require("crypto-js")
-const key = "flljvkqflqoifumqeoqefvuuepmqvfuqmvfeiu"
 const User = require('../models/User')
 
 require('dotenv').config()
